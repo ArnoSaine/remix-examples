@@ -5,6 +5,8 @@ import {
 } from 'remix/multiple-import-maps-polyfill'
 import { run } from 'remix/ui'
 
+import { initializeLocalization } from './localization.ts'
+
 const app = run({
   async loadModule(moduleUrl, exportName) {
     let mod = await importModule(moduleUrl)
@@ -21,6 +23,8 @@ const app = run({
     return []
   },
 })
+
+initializeLocalization()
 
 if (import.meta.hot) {
   import.meta.hot.on('server:update', async () => {

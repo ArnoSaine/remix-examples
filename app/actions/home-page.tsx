@@ -2,13 +2,18 @@
 import type { Handle, RemixNode } from 'remix/ui'
 import { css } from 'remix/ui'
 
+import { localization } from '../localization.ts'
 import { Document } from './document.tsx'
+import { type MessageDescriptor, defineMessage } from '@example/fluent-remix'
+import { LocaleSelect } from './public/locale-select.tsx'
 import { PromptButton } from './public/prompt-button.tsx'
 
 const FONT_STACK =
   "'JetBrains Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace"
 
-export function HomePage() {
+export function HomePage(handle: Handle) {
+  let { locale } = localization(handle)
+
   return () => (
     <Document head={<HomeHead />}>
       <main
@@ -54,6 +59,7 @@ export function HomePage() {
             gap: '72px',
           })}
         >
+          <LocaleSelect locale={locale} />
           <Masthead />
           <Columns />
           <Footer />
@@ -88,6 +94,7 @@ function Masthead() {
         gap: '36px',
         width: '100%',
       })}
+      data-l10n-id="masthead"
     >
       <p
         mix={css({
@@ -100,6 +107,7 @@ function Masthead() {
           color: 'var(--text-primary)',
           textAlign: 'center',
         })}
+        data-l10n-id="welcome"
       >
         Welcome to
       </p>
@@ -123,6 +131,7 @@ function Columns() {
           width: '100%',
         },
       })}
+      data-l10n-id="getting-started-section"
     >
       <GetStartedCard />
       <CodingWithAiCard />
@@ -133,7 +142,9 @@ function Columns() {
 function GetStartedCard() {
   return () => (
     <div mix={[cardStyle, css({ flex: '0 0 auto' })]}>
-      <h2 mix={cardHeaderStyle}>Get started</h2>
+      <h2 mix={cardHeaderStyle} data-l10n-id="get-started">
+        Get started
+      </h2>
       <ul
         mix={css({
           listStyle: 'none',
@@ -146,13 +157,17 @@ function GetStartedCard() {
         })}
       >
         <li>
-          <CardLink href="https://api.remix.run" icon={<AtomIcon />} label="Remix API" />
+          <CardLink
+            href="https://api.remix.run"
+            icon={<AtomIcon />}
+            label={defineMessage({ id: 'remix-api', defaultMessage: 'Remix API' })}
+          />
         </li>
         <li>
           <CardLink
             href="https://discord.gg/xwx7mMzVkA"
             icon={<DiscordFaceIcon />}
-            label="Join Discord"
+            label={defineMessage({ id: 'join-discord', defaultMessage: 'Join Discord' })}
           />
         </li>
       </ul>
@@ -172,7 +187,9 @@ function CodingWithAiCard() {
         }),
       ]}
     >
-      <h2 mix={cardHeaderStyle}>Coding with AI?</h2>
+      <h2 mix={cardHeaderStyle} data-l10n-id="coding-with-ai">
+        Coding with AI?
+      </h2>
       <div
         mix={css({
           width: '100%',
@@ -189,21 +206,50 @@ function CodingWithAiCard() {
             lineHeight: 1.67,
             color: 'var(--text-primary)',
           })}
+          data-l10n-id="prompt-intro"
         >
           Navigate to this project folder using your preferred AI-powered tool, and try copying any
           of these prompts into the agent chat:
         </p>
-        <PromptButton text="I want to build a simple headless Shopify store, what does Remix have available to help scaffold this?" />
-        <PromptButton text="Add a sqlite database with a users table and scaffold a signup flow" />
-        <PromptButton text="Make a copy to clipboard component that confirms to the user it was copied then resets after a few seconds" />
-        <PromptButton text="Add a page with a remix/ui/select component and remix/ui/button variants" />
-        <PromptButton text="Add compression middleware" />
+        <PromptButton
+          text={defineMessage({
+            id: 'prompt-shopify',
+            defaultMessage:
+              'I want to build a simple headless Shopify store, what does Remix have available to help scaffold this?',
+          })}
+        />
+        <PromptButton
+          text={defineMessage({
+            id: 'prompt-database',
+            defaultMessage: 'Add a sqlite database with a users table and scaffold a signup flow',
+          })}
+        />
+        <PromptButton
+          text={defineMessage({
+            id: 'prompt-copy',
+            defaultMessage:
+              'Make a copy to clipboard component that confirms to the user it was copied then resets after a few seconds',
+          })}
+        />
+        <PromptButton
+          text={defineMessage({
+            id: 'prompt-select',
+            defaultMessage:
+              'Add a page with a remix/ui/select component and remix/ui/button variants',
+          })}
+        />
+        <PromptButton
+          text={defineMessage({
+            id: 'prompt-compression',
+            defaultMessage: 'Add compression middleware',
+          })}
+        />
       </div>
     </div>
   )
 }
 
-function CardLink(handle: Handle<{ href: string; icon: RemixNode; label: string }>) {
+function CardLink(handle: Handle<{ href: string; icon: RemixNode; label: MessageDescriptor }>) {
   return () => {
     let { href, icon, label } = handle.props
 
@@ -228,7 +274,12 @@ function CardLink(handle: Handle<{ href: string; icon: RemixNode; label: string 
         })}
       >
         <IconSlot>{icon}</IconSlot>
-        <span mix={css({ fontSize: '14px', lineHeight: 1.5, whiteSpace: 'nowrap' })}>{label}</span>
+        <span
+          mix={css({ fontSize: '14px', lineHeight: 1.5, whiteSpace: 'nowrap' })}
+          data-l10n-id={label.id}
+        >
+          {label.defaultMessage}
+        </span>
       </a>
     )
   }
@@ -304,17 +355,26 @@ function Footer() {
             },
             '& svg': { width: '100%', height: '100%', display: 'block' },
           })}
+          data-l10n-id="social-links"
         >
-          <a href="https://github.com/remix-run/remix" aria-label="GitHub">
+          <a
+            href="https://github.com/remix-run/remix"
+            aria-label="GitHub"
+            data-l10n-id="github-link"
+          >
             <GitHubIcon />
           </a>
-          <a href="https://x.com/remix_run" aria-label="X">
+          <a href="https://x.com/remix_run" aria-label="X" data-l10n-id="x-link">
             <XIcon />
           </a>
-          <a href="https://www.youtube.com/@Remix-Run" aria-label="YouTube">
+          <a
+            href="https://www.youtube.com/@Remix-Run"
+            aria-label="YouTube"
+            data-l10n-id="youtube-link"
+          >
             <YouTubeIcon />
           </a>
-          <a href="https://discord.gg/xwx7mMzVkA" aria-label="Discord">
+          <a href="https://discord.gg/xwx7mMzVkA" aria-label="Discord" data-l10n-id="discord-link">
             <DiscordIcon />
           </a>
         </nav>
@@ -334,8 +394,8 @@ function Footer() {
           '& p': { margin: 0, whiteSpace: 'nowrap' },
         })}
       >
-        <p>DOCS AND EXAMPLES LICENSED UNDER MIT</p>
-        <p>&copy;2026 SHOPIFY, INC.</p>
+        <p data-l10n-id="license">DOCS AND EXAMPLES LICENSED UNDER MIT</p>
+        <p data-l10n-id="copyright">&copy;2026 SHOPIFY, INC.</p>
       </div>
     </footer>
   )

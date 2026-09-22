@@ -9,9 +9,14 @@ const isHmr = Boolean(isDevelopment && process.env.REMIX_NODE_HMR)
 export const assets = createAssetServer({
   basePath: '/assets',
   rootDir,
+  mounts: {
+    app: 'app',
+    npm: 'node_modules',
+    packages: 'packages',
+  },
 
   allowFiles: ['app/routes.ts', 'app/**/public/**'],
-  allowPackages: ['remix'],
+  allowPackages: ['remix', '@example/fluent-remix', '@fluent/bundle', '@fluent/dom'],
   denyFiles: ['app/**/*.test.*'],
   sourceMaps: isDevelopment ? 'external' : undefined,
   minify: !isDevelopment,

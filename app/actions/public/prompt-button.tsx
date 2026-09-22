@@ -1,4 +1,6 @@
+import type { MessageDescriptor } from '@example/fluent-remix'
 import { clientEntry, css, on, type Handle, type SerializableProps } from 'remix/ui'
+import { localization } from './localization.ts'
 
 const FADE_MS = 180
 const HOLD_MS = 1200
@@ -6,7 +8,7 @@ const HOLD_MS = 1200
 type CopyState = 'idle' | 'copied' | 'failed' | 'resetting'
 
 interface PromptButtonProps extends SerializableProps {
-  text: string
+  text: MessageDescriptor
 }
 
 // This component hydrates independently; the rest of the page stays static HTML.
@@ -16,13 +18,21 @@ export const PromptButton = clientEntry(
     let state: CopyState = 'idle'
 
     return () => {
-      let promptLabel = `\u201C${handle.props.text}\u201D`
+      let promptLabel = (
+        <span>
+          {'\u201C'}
+          <span data-l10n-id={handle.props.text.id}>{handle.props.text.defaultMessage}</span>
+          {'\u201D'}
+        </span>
+      )
       let label =
-        state === 'copied' || state === 'resetting'
-          ? 'Copied to clipboard'
-          : state === 'failed'
-            ? 'Copy failed'
-            : promptLabel
+        state === 'copied' || state === 'resetting' ? (
+          <span data-l10n-id="copied">Copied to clipboard</span>
+        ) : state === 'failed' ? (
+          <span data-l10n-id="copy-failed">Copy failed</span>
+        ) : (
+          promptLabel
+        )
       let active = state === 'copied' || state === 'failed' || state === 'resetting'
 
       return (
@@ -32,7 +42,9 @@ export const PromptButton = clientEntry(
             buttonStyle,
             on('click', async (_event, signal) => {
               try {
-                await navigator.clipboard.writeText(handle.props.text)
+                await navigator.clipboard.writeText(
+                  await localization.formatValue(handle.props.text.id),
+                )
                 if (signal.aborted) return
               } catch {
                 state = 'failed'
