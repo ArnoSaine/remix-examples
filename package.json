@@ -13,7 +13,7 @@
     "node": ">=24.3.0"
   },
   "dependencies": {
-    "remix": "^3.0.0-rc.3"
+    "remix": "^3.0.0"
   },
   "devDependencies": {
     "@types/node": "latest",
