@@ -12,7 +12,7 @@ The package expects Fluent resources in `.ftl` format. The `@fluent/bundle`, `@f
 
 ## Server setup
 
-Create a localization instance with a locale policy and a resource loader. `getLocale` runs for each request, so it can use a cookie, the `Accept-Language` header, or application-specific logic.
+Create a localization instance with a locale policy, locale-specific resource IDs, and a resource generator. `getLocale` runs for each request, so it can use a cookie, the `Accept-Language` header, or application-specific logic.
 
 ```ts
 // app/localization.ts
@@ -24,19 +24,24 @@ const supportedLocales = ['en-US', 'es'] as const
 type Locale = (typeof supportedLocales)[number]
 
 export const { localization, middleware } = createRemixLocalization<Locale>({
-  loadResource(locale) {
-    return readFile(new URL(`./locales/${locale}.ftl`, import.meta.url), 'utf8')
-  },
   getLocale(request) {
     return negotiateLocale(request, {
       defaultLocale: 'en-US',
       supportedLocales,
     })
   },
+  resourceIds: (locale) => [`/locales/${locale}.ftl`],
+  async *generateResources(resourceIds) {
+    for (const resourceId of resourceIds) {
+      yield readFile(new URL(`.${resourceId}`, import.meta.url), 'utf8')
+    }
+  },
 })
 ```
 
 `negotiateLocale` first honors a supported saved locale, then negotiates the request's `Accept-Language` header, and finally falls back to the configured default locale.
+
+`resourceIds` returns the Fluent resources for the negotiated locale. `generateResources` loads their FTL source in the same order; each yielded source becomes a separate Fluent bundle, and earlier resources take precedence when more than one defines the same message.
 
 Add `middleware` after Remix's render middleware:
 
@@ -128,7 +133,7 @@ await setLocale('es')
 
 Call `initializeLocalization` after the Remix browser runtime has been created with `run()`. This is the package's client-side hydration initialization step: it attaches Fluent to the server-rendered document and translates the existing DOM.
 
-`initializeLocalization` uses the document's `lang` attribute when present; otherwise it uses `defaultLocale`. `setLocale` updates the `lang` attribute, reloads the Fluent resource, and translates the connected document. The `localization` property exposes the underlying `DOMLocalization` instance after initialization:
+`initializeLocalization` uses the document's `lang` attribute when present; otherwise it uses `defaultLocale`. `setLocale` updates the `lang` attribute, reloads the configured Fluent resources, and translates the connected document. The `localization` property exposes the underlying `DOMLocalization` instance after initialization:
 
 ```tsx
 import { localization } from './localization.ts'
