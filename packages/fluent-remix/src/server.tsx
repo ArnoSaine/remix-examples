@@ -33,23 +33,32 @@ export async function negotiateLocale<Locale extends string>(
 }
 
 export interface RemixLocalizationOptions<Locale extends string> {
-  loadResource(locale: Locale): string
   getLocale(request: Request): Promise<Locale>
+  resourceIds(locale: Locale): string[]
+  generateResources(resourceIds: string[]): AsyncIterable<string>
 }
 
 export function createRemixLocalization<Locale extends string>(
   options: RemixLocalizationOptions<Locale>,
 ) {
-  function createBundle(locale: Locale) {
-    let bundle = new FluentBundle(locale)
-    bundle.addResource(new FluentResource(options.loadResource(locale)))
-    return bundle
+  function generateBundles(locale: string) {
+    return async function* generateBundles(resourceIds: string[]) {
+      for await (let source of options.generateResources(resourceIds)) {
+        let bundle = new FluentBundle(locale)
+        bundle.addResource(new FluentResource(source))
+        yield bundle
+      }
+    }
   }
 
-  function getTranslator(locale: Locale): Translate {
-    let bundle = createBundle(locale)
+  async function getTranslator(locale: Locale): Promise<Translate> {
+    let bundles: FluentBundle[] = []
+    for await (let bundle of generateBundles(locale)(options.resourceIds(locale)))
+      bundles.push(bundle)
 
     return (id, args, errors) => {
+      let bundle = bundles.find((candidate) => candidate.hasMessage(id))
+      if (!bundle) throw new Error(`Missing Fluent message: ${id}`)
       let message = bundle.getMessage(id)
       if (!message?.value) throw new Error(`Missing Fluent message: ${id}`)
       return bundle.formatPattern(message.value, args, errors)
@@ -58,9 +67,7 @@ export function createRemixLocalization<Locale extends string>(
 
   async function localizeHtml(html: string, locale: Locale) {
     let dom = new JSDOM(html, { url: 'http://localhost' })
-    let localization = new DOMLocalization([], function* () {
-      yield createBundle(locale)
-    })
+    let localization = new DOMLocalization(options.resourceIds(locale), generateBundles(locale))
 
     localization.connectRoot(dom.window.document.documentElement)
     await localization.translateRoots()
@@ -109,7 +116,7 @@ export function createRemixLocalization<Locale extends string>(
 
   let middleware: Middleware<LocalizationContext> = async (context, next) => {
     let locale = await options.getLocale(context.request)
-    let translate = getTranslator(locale)
+    let translate = await getTranslator(locale)
     context.set(Locale, locale, { property: 'locale' })
     context.set(Translator, translate, { property: 'translate' })
 

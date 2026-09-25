@@ -1,5 +1,6 @@
 import type { MessageDescriptor } from '@example/fluent-remix'
 import { clientEntry, css, on, type Handle, type SerializableProps } from 'remix/ui'
+
 import { localization } from './localization.ts'
 
 const FADE_MS = 180

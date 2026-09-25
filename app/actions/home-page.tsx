@@ -1,10 +1,10 @@
 // Delete this file and put your own home page in app/actions/controller.tsx
+import { type MessageDescriptor, defineMessage } from '@example/fluent-remix'
 import type { Handle, RemixNode } from 'remix/ui'
 import { css } from 'remix/ui'
 
 import { localization } from '../localization.ts'
 import { Document } from './document.tsx'
-import { type MessageDescriptor, defineMessage } from '@example/fluent-remix'
 import { LocaleSelect } from './public/locale-select.tsx'
 import { PromptButton } from './public/prompt-button.tsx'
 
