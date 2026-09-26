@@ -73,6 +73,22 @@ function Masthead() {
 }
 ```
 
+### Generated IDs
+
+For text or attributes whose ID can be derived from their content, use `data-l10n` or `data-l10n-description` instead of an explicit `data-l10n-id`:
+
+```tsx
+<p data-l10n>Welcome to Remix</p>
+<img data-l10n alt="Remix logo" src="/logo.svg" />
+<button data-l10n-description="Submit the signup form">Sign up</button>
+```
+
+On the server, the middleware assigns a `data-l10n-id` and removes `data-l10n` and `data-l10n-description` from the HTML before Fluent translates it. An element with `data-l10n-description` and no explicit ID also gets an ID without needing `data-l10n`. The description disambiguates otherwise identical messages; it contributes to the ID but is not displayed. Do not combine `data-l10n` with an explicit `data-l10n-id`: the server warns and leaves the explicit ID unchanged.
+
+The ID is the first six URL-safe Base64 characters of a SHA-512 hash of sorted message fields: the element's text content as `defaultMessage` (when nonempty), its localizable attributes (such as `title`, `aria-label`, `alt` on images, or `placeholder` on inputs), and any `data-l10n-description`. Non-localizable attributes such as `class` and `src` do not contribute. Changing the text, description, or a localizable attribute changes the generated ID; use an explicit `data-l10n-id` when you need an ID that remains stable as the copy changes. Provide a matching message under the generated ID in your Fluent resources.
+
+For browser-hydrated elements, the JavaScript response transform computes the same ID from **literal string props** and replaces localized `children` with `null` so hydration does not overwrite translated server-rendered text. Non-string or computed prop values are ignored when hashing for the browser. Use static string text, descriptions, and translatable attributes when you rely on matching generated IDs across server rendering and hydration; prefer an explicit ID for dynamic content.
+
 Use `localization(handle)` to access the current locale or `translate()` inside components:
 
 ```tsx
@@ -153,7 +169,7 @@ allowPackages: ['remix', '@example/fluent-remix', '@fluent/bundle', '@fluent/dom
 
 ## Message descriptors
 
-Use `defineMessage` for message descriptors passed between components:
+Use `defineMessage` for message descriptors passed between components. Provide a `defaultMessage` and, optionally, an explicit `id` and a `description` to distinguish otherwise identical messages:
 
 ```tsx
 import { defineMessage } from '@example/fluent-remix'
@@ -169,7 +185,16 @@ function GetStartedCard() {
 }
 ```
 
-The helper preserves the descriptor's `id` and `defaultMessage` and provides the `MessageDescriptor` type. It marks a message descriptor for discovery by future tooling to extract localization messages.
+Without an `id`, `defineMessage` generates one using the same sorted-fields SHA-512 hash as generated element IDs. For example:
+
+```tsx
+const greeting = defineMessage({
+  defaultMessage: 'Welcome!',
+  description: 'Greeting on the home page',
+})
+```
+
+The server returns an ID-only descriptor, whether the ID was explicit or generated. The JavaScript response transform replaces calls with ID-less, static string message objects with `defineMessage({ id: "generated-id" })` (using the actual generated ID), removing the default text and description from those browser calls. Calls with explicit IDs, dynamic values, or spreads are not rewritten; use static string fields for automatic generation so the browser and server agree on the ID. `MessageDescriptor` is exported as a type; `defineMessage` also marks messages for discovery by future extraction tooling. Changing `defaultMessage` or `description` changes a generated ID, so use an explicit `id` to keep references stable across copy edits.
 
 ## Fluent resources
 

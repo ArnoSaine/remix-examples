@@ -1,11 +1,17 @@
+import { generateId } from './assignLocalizationIds.ts'
+
 export type MessageDescriptor = {
-  id: string
   defaultMessage: string
+  description?: string
+  id?: string
 }
+
+const isServer = typeof window === 'undefined'
 
 /**
  * Marks a message descriptor for discovery by future tooling to extract localization messages.
  */
-export function defineMessage(message: MessageDescriptor): MessageDescriptor {
-  return message
-}
+export const defineMessage = isServer
+  ? (message: MessageDescriptor) =>
+      ({ id: message.id ? message.id : generateId(message) }) as MessageDescriptor
+  : (message: MessageDescriptor) => ({ id: message.id }) as MessageDescriptor

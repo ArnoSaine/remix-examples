@@ -7,7 +7,8 @@ import type { RemixNode } from 'remix/component/jsx-runtime'
 import { Renderer, type RenderFunction } from 'remix/middleware/render'
 import { createContextKey, type ContextEntry, type Middleware } from 'remix/router'
 
-import { nullLocalizedChildren } from './nullLocalizedChildren.ts'
+import { assignLocalizationIds } from './assignLocalizationIds.ts'
+import { prepareLocalizedJavaScript } from './prepareLocalizedJavaScript.ts'
 
 export type Translate = (
   id: string,
@@ -69,6 +70,8 @@ export function createRemixLocalization<Locale extends string>(
 
   async function localizeHtml(html: string, locale: Locale) {
     let dom = new JSDOM(html, { url: 'http://localhost' })
+    assignLocalizationIds(dom)
+
     let localization = new DOMLocalization(options.resourceIds(locale), generateBundles(locale))
 
     localization.connectRoot(dom.window.document.documentElement)
@@ -131,7 +134,7 @@ export function createRemixLocalization<Locale extends string>(
     )
 
     let response = await localizeHtmlResponse(await next(), locale)
-    response = await nullLocalizedChildren(response)
+    response = await prepareLocalizedJavaScript(response)
 
     return response
   }
