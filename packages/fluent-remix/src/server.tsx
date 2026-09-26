@@ -78,14 +78,9 @@ export function createRemixLocalization<Locale extends string>(
     let contentType = response.headers.get('Content-Type') ?? ''
     if (!contentType.includes('text/html')) return response
 
-    let headers = new Headers(response.headers)
-    headers.set('Content-Type', 'text/html; charset=utf-8')
+    response.headers.append('Vary', 'Accept-Language')
 
-    return new Response(await localizeHtml(await response.text(), locale), {
-      status: response.status,
-      statusText: response.statusText,
-      headers,
-    })
+    return new Response(await localizeHtml(await response.text(), locale), response)
   }
 
   let Locale = createContextKey<Locale>()
@@ -133,15 +128,7 @@ export function createRemixLocalization<Locale extends string>(
       ),
     )
 
-    let response = await localizeHtmlResponse(await next(), locale)
-    let headers = new Headers(response.headers)
-    headers.append('Vary', 'Accept-Language')
-
-    return new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers,
-    })
+    return localizeHtmlResponse(await next(), locale)
   }
 
   return { Locale, Translator, LocalizationProvider, localization, middleware }
