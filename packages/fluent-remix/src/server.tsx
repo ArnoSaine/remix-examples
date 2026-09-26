@@ -7,6 +7,8 @@ import type { RemixNode } from 'remix/component/jsx-runtime'
 import { Renderer, type RenderFunction } from 'remix/middleware/render'
 import { createContextKey, type ContextEntry, type Middleware } from 'remix/router'
 
+import { nullLocalizedChildren } from './nullLocalizedChildren.ts'
+
 export type Translate = (
   id: string,
   args?: Parameters<FluentBundle['formatPattern']>[1],
@@ -128,7 +130,10 @@ export function createRemixLocalization<Locale extends string>(
       ),
     )
 
-    return localizeHtmlResponse(await next(), locale)
+    let response = await localizeHtmlResponse(await next(), locale)
+    response = await nullLocalizedChildren(response)
+
+    return response
   }
 
   return { Locale, Translator, LocalizationProvider, localization, middleware }
