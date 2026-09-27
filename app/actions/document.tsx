@@ -1,4 +1,4 @@
-import type { MessageDescriptor } from '@example/fluent-remix'
+import { defineMessage, type MessageDescriptor } from '@example/fluent-remix'
 import type { Handle, RemixNode } from 'remix/component'
 import { css } from 'remix/component'
 import { ImportMap } from 'remix/component/server'
@@ -12,12 +12,15 @@ export interface DocumentProps {
   title?: MessageDescriptor
 }
 
-const DEFAULT_TITLE = readAppDisplayName('My%20Remix%20App')
+const DEFAULT_TITLE = defineMessage({
+  id: 'title',
+  defaultMessage: 'My Remix App',
+})
 
 export function Document(handle: Handle<DocumentProps>) {
   let { locale } = localization(handle)
   return () => {
-    let { children, head, title = { id: 'title', defaultMessage: DEFAULT_TITLE } } = handle.props
+    let { children, head, title = DEFAULT_TITLE } = handle.props
     let { href, importMap, preloads } = scriptEntry
 
     return (
@@ -39,8 +42,4 @@ export function Document(handle: Handle<DocumentProps>) {
       </html>
     )
   }
-}
-
-function readAppDisplayName(value: string): string {
-  return value.startsWith('%%') ? 'Remix App' : decodeURIComponent(value)
 }

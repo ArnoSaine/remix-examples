@@ -56,6 +56,8 @@ export function generateId(value: Record<string, string>) {
   // Format as Base64 and clean up URL/filename unsafe characters
   const base64Hash = hash.digest('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '') // Remove padding
 
-  // Truncate to the requested length (6 characters by default)
-  return base64Hash.substring(0, 6)
+  // Fluent message IDs must start with a letter. Preserve the full six-character
+  // hash even when its first character is not valid by adding a prefix.
+  const id = base64Hash.substring(0, 6)
+  return /^[A-Za-z]/.test(id) ? id : `m${id}`
 }

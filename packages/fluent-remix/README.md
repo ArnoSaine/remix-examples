@@ -85,7 +85,7 @@ For text or attributes whose ID can be derived from their content, use `data-l10
 
 On the server, the middleware assigns a `data-l10n-id` and removes `data-l10n` and `data-l10n-description` from the HTML before Fluent translates it. An element with `data-l10n-description` and no explicit ID also gets an ID without needing `data-l10n`. The description disambiguates otherwise identical messages; it contributes to the ID but is not displayed. Do not combine `data-l10n` with an explicit `data-l10n-id`: the server warns and leaves the explicit ID unchanged.
 
-The ID is the first six URL-safe Base64 characters of a SHA-512 hash of sorted message fields: the element's text content as `defaultMessage` (when nonempty), its localizable attributes (such as `title`, `aria-label`, `alt` on images, or `placeholder` on inputs), and any `data-l10n-description`. Non-localizable attributes such as `class` and `src` do not contribute. Changing the text, description, or a localizable attribute changes the generated ID; use an explicit `data-l10n-id` when you need an ID that remains stable as the copy changes. Provide a matching message under the generated ID in your Fluent resources.
+The ID is the first six URL-safe Base64 characters of a SHA-512 hash of sorted message fields, prefixed with `m` if the hash starts with a character invalid at the beginning of a Fluent ID: the element's text content as `defaultMessage` (when nonempty), its localizable attributes (such as `title`, `aria-label`, `alt` on images, or `placeholder` on inputs), and any `data-l10n-description`. Non-localizable attributes such as `class` and `src` do not contribute. Changing the text, description, or a localizable attribute changes the generated ID; use an explicit `data-l10n-id` when you need an ID that remains stable as the copy changes. Provide a matching message under the generated ID in your Fluent resources.
 
 For browser-hydrated elements, the JavaScript response transform computes the same ID from **literal string props** and replaces localized `children` with `null` so hydration does not overwrite translated server-rendered text. Non-string or computed prop values are ignored when hashing for the browser. Use static string text, descriptions, and translatable attributes when you rely on matching generated IDs across server rendering and hydration; prefer an explicit ID for dynamic content.
 
@@ -203,6 +203,22 @@ The server returns an ID-only descriptor, whether the ID was explicit or generat
 ```ftl
 welcome = Welcome, { $name }!
 ```
+
+### Extracting source messages
+
+Use the source extractor to generate an FTL template from static `.ts` and `.tsx` messages (it does not read existing translations or overwrite resource files):
+
+```sh
+npm run --silent extract -- app > messages.ftl
+```
+
+With no argument the command scans `app`; you can also pass individual files or directories. It writes serialized FTL to stdout and extraction diagnostics to stderr. Diagnostics cause a nonzero exit code, so check them before using the output as a complete catalog. Commented-out code is ignored.
+
+The extractor recognizes direct `defineMessage({ defaultMessage: '…', description: '…' })` calls and native JSX elements with `data-l10n`, `data-l10n-description`, or a literal `data-l10n-id`. It collects static text, localizable attributes, and descriptions, and uses the same generated ID function as server localization. Its FTL comments include the message description and each file, line, column, element name (for JSX), and enclosing function or variable. Identical messages with the same ID are combined; conflicting content is reported rather than silently overwritten.
+
+For programmatic use, import `extractMessages` and `serializeMessages` from `@example/fluent-remix/extract`. `extractMessages([{ file, source }])` returns `{ messages, diagnostics }`; `serializeMessages(messages)` creates the FTL template using `@fluent/syntax`.
+
+Only statically determinable content is extracted. Dynamic or nested JSX text, dynamic IDs or descriptions, spread props for generated IDs, and nonliteral `defineMessage` fields produce diagnostics. Explicit-ID elements with dynamic text or attributes can still yield their other static fields. Invalid explicit Fluent IDs are reported instead of emitted. Review these diagnostics and use explicit IDs where static extraction is not possible.
 
 ## License
 

@@ -9,7 +9,7 @@ export type MessageDescriptor = {
 const isServer = typeof window === 'undefined'
 
 /**
- * Marks a message descriptor for discovery by future tooling to extract localization messages.
+ * Marks a message descriptor to be discovered and extracted as localization messages.
  */
 export const defineMessage = isServer
   ? (message: MessageDescriptor) =>

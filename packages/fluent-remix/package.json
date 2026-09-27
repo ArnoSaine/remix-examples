@@ -18,12 +18,14 @@
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
-    "./server": "./src/server.tsx"
+    "./server": "./src/server.tsx",
+    "./extract": "./src/extractMessages.ts"
   },
   "dependencies": {
     "@fluent/bundle": "^0.19.1",
     "@fluent/dom": "^0.10.2",
     "@fluent/langneg": "^0.7.0",
+    "@fluent/syntax": "^0.19.0",
     "jsdom": "^30.1.0",
     "oxc-parser": "^0.121.0"
   },
