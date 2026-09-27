@@ -107,7 +107,7 @@ function Masthead() {
           color: 'var(--text-primary)',
           textAlign: 'center',
         })}
-        data-l10n-id="welcome"
+        data-l10n-description="Introductory line above the Remix logo"
       >
         Welcome to
       </p>
@@ -142,7 +142,7 @@ function Columns() {
 function GetStartedCard() {
   return () => (
     <div mix={[cardStyle, css({ flex: '0 0 auto' })]}>
-      <h2 mix={cardHeaderStyle} data-l10n-id="get-started">
+      <h2 mix={cardHeaderStyle} data-l10n>
         Get started
       </h2>
       <ul
@@ -160,14 +160,14 @@ function GetStartedCard() {
           <CardLink
             href="https://api.remix.run"
             icon={<AtomIcon />}
-            label={defineMessage({ id: 'remix-api', defaultMessage: 'Remix API' })}
+            label={defineMessage({ defaultMessage: 'Remix API' })}
           />
         </li>
         <li>
           <CardLink
             href="https://discord.gg/xwx7mMzVkA"
             icon={<DiscordFaceIcon />}
-            label={defineMessage({ id: 'join-discord', defaultMessage: 'Join Discord' })}
+            label={defineMessage({ defaultMessage: 'Join Discord' })}
           />
         </li>
       </ul>
@@ -187,7 +187,7 @@ function CodingWithAiCard() {
         }),
       ]}
     >
-      <h2 mix={cardHeaderStyle} data-l10n-id="coding-with-ai">
+      <h2 mix={cardHeaderStyle} data-l10n-description="Section heading">
         Coding with AI?
       </h2>
       <div
@@ -206,34 +206,34 @@ function CodingWithAiCard() {
             lineHeight: 1.67,
             color: 'var(--text-primary)',
           })}
-          data-l10n-id="prompt-intro"
+          data-l10n-description="Introduction"
         >
           Navigate to this project folder using your preferred AI-powered tool, and try copying any
           of these prompts into the agent chat:
         </p>
         <PromptButton
           text={defineMessage({
-            id: 'prompt-shopify',
+            description: 'Prompt',
             defaultMessage:
               'I want to build a simple headless Shopify store, what does Remix have available to help scaffold this?',
           })}
         />
         <PromptButton
           text={defineMessage({
-            id: 'prompt-database',
+            description: 'Prompt',
             defaultMessage: 'Add a sqlite database with a users table and scaffold a signup flow',
           })}
         />
         <PromptButton
           text={defineMessage({
-            id: 'prompt-copy',
+            description: 'Prompt',
             defaultMessage:
               'Make a copy to clipboard component that confirms to the user it was copied then resets after a few seconds',
           })}
         />
         <PromptButton
           text={defineMessage({
-            id: 'prompt-compression',
+            description: 'Prompt',
             defaultMessage: 'Add compression middleware',
           })}
         />
@@ -357,7 +357,12 @@ function Footer() {
           >
             <GitHubIcon />
           </a>
-          <a href="https://x.com/remix_run" aria-label="X" data-l10n-id="x-link">
+          <a
+            href="https://x.com/remix_run"
+            aria-label="X"
+            data-l10n-id="x-link"
+            data-l10n-description="Accessible label for the X (formerly Twitter) social media link"
+          >
             <XIcon />
           </a>
           <a
@@ -387,8 +392,8 @@ function Footer() {
           '& p': { margin: 0, whiteSpace: 'nowrap' },
         })}
       >
-        <p data-l10n-id="license">DOCS AND EXAMPLES LICENSED UNDER MIT</p>
-        <p data-l10n-id="copyright">&copy;2026 SHOPIFY, INC.</p>
+        <p data-l10n>DOCS AND EXAMPLES LICENSED UNDER MIT</p>
+        <p data-l10n>&copy;2026 SHOPIFY, INC.</p>
       </div>
     </footer>
   )

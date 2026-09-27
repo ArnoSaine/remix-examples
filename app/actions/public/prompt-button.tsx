@@ -28,9 +28,11 @@ export const PromptButton = clientEntry(
       )
       let label =
         state === 'copied' || state === 'resetting' ? (
-          <span data-l10n-id="copied">Copied to clipboard</span>
+          <span data-l10n-description="Confirmation shown after copying a prompt">
+            Copied to clipboard
+          </span>
         ) : state === 'failed' ? (
-          <span data-l10n-id="copy-failed">Copy failed</span>
+          <span data-l10n-description="Error shown when copying a prompt fails">Copy failed</span>
         ) : (
           promptLabel
         )

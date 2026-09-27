@@ -23,7 +23,7 @@ export const LocaleSelect = clientEntry(
     let locale = handle.props.locale
     return () => (
       <div mix={controlStyle}>
-        <label for="locale-select" mix={labelStyle} data-l10n-id="locale-select">
+        <label for="locale-select" mix={labelStyle} data-l10n>
           Language
         </label>
         <select

@@ -13,7 +13,6 @@ export interface DocumentProps {
 }
 
 const DEFAULT_TITLE = defineMessage({
-  id: 'title',
   defaultMessage: 'My Remix App',
 })
 
