@@ -1,17 +1,22 @@
 import { generateId } from './assignLocalizationIds.ts'
 
 export type MessageDescriptor = {
-  defaultMessage: string
-  description?: string
-  id?: string
+  readonly id: string
+  readonly defaultMessage: string | undefined
 }
 
-const isServer = typeof window === 'undefined'
+export type MessageDefinition = {
+  readonly defaultMessage: string
+  readonly description?: string
+  readonly id?: string
+}
 
 /**
- * Marks a message descriptor to be discovered and extracted as localization messages.
+ * Marks a message definition to be discovered and extracted as localization messages.
  */
-export const defineMessage = isServer
-  ? (message: MessageDescriptor) =>
-      ({ id: message.id ? message.id : generateId(message) }) as MessageDescriptor
-  : (message: MessageDescriptor) => ({ id: message.id }) as MessageDescriptor
+export function defineMessage(message: MessageDefinition): MessageDescriptor {
+  return {
+    id: message.id ?? generateId(message),
+    defaultMessage: message.defaultMessage,
+  }
+}

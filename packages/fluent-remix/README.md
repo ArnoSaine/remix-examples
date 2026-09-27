@@ -169,7 +169,7 @@ allowPackages: ['remix', '@example/fluent-remix', '@fluent/bundle', '@fluent/dom
 
 ## Message descriptors
 
-Use `defineMessage` for message descriptors passed between components. Provide a `defaultMessage` and, optionally, an explicit `id` and a `description` to distinguish otherwise identical messages:
+Use `defineMessage` to create message descriptors passed between components. Its `MessageDefinition` input requires a `defaultMessage` and optionally accepts an explicit `id` and a `description`. The returned `MessageDescriptor` has `{ readonly id: string; readonly defaultMessage: string | undefined }`: server rendering receives the fallback text, while prepared browser JavaScript omits it.
 
 ```tsx
 import { defineMessage } from '@example/fluent-remix'
@@ -194,7 +194,7 @@ const greeting = defineMessage({
 })
 ```
 
-The server returns an ID-only descriptor, whether the ID was explicit or generated. The JavaScript response transform replaces calls with ID-less, static string message objects with `defineMessage({ id: "generated-id" })` (using the actual generated ID), removing the default text and description from those browser calls. Calls with explicit IDs, dynamic values, or spreads are not rewritten; use static string fields for automatic generation so the browser and server agree on the ID. `MessageDescriptor` is exported as a type; `defineMessage` also marks messages for discovery by future extraction tooling. Changing `defaultMessage` or `description` changes a generated ID, so use an explicit `id` to keep references stable across copy edits.
+On the server, `defineMessage` returns the ID and source `defaultMessage` so server-rendered elements have fallback content before localization. The JavaScript response transform replaces statically resolvable calls with `{ id: "generated-id" }` (using the actual ID), removing both the call and its message fields from the browser payload. Consequently, `defaultMessage` is typed as `string | undefined`. The transform also changes localized JSX children to `null`, preventing browser hydration from overwriting translated server-rendered text. Explicit string IDs can be reduced even when the remaining fields are dynamic or spread; ID-less calls require static string fields so the browser transform can generate the same ID as the server. `MessageDefinition` and `MessageDescriptor` are both exported as types. Changing `defaultMessage` or `description` changes a generated ID, so use an explicit `id` to keep references stable across copy edits.
 
 ## Fluent resources
 

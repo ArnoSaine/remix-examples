@@ -55,31 +55,38 @@ function prepareSource(source: string) {
       node.callee.name === 'defineMessage'
     ) {
       let message = node.arguments[0]
-      if (
-        message?.type === 'ObjectExpression' &&
-        message.properties.every((property) => property.type === 'Property')
-      ) {
-        let values: Record<string, string> = {}
-        let hasId = false
-        let isStatic = true
-        for (let property of message.properties) {
-          if (property.type !== 'Property') continue
-          let name = propertyName(property)
-          if (name === 'id') hasId = true
-          let value = stringValue(property)
-          if (!name || value === undefined) {
-            isStatic = false
-            break
-          }
-          values[name] = value
-        }
-        // Dynamic expressions cannot be hashed at build time to match defineMessage on the server.
-        if (!hasId && isStatic && Object.hasOwn(values, 'defaultMessage')) {
+      if (message?.type === 'ObjectExpression') {
+        let explicitId = message.properties.find(
+          (property) => property.type === 'Property' && propertyName(property) === 'id',
+        )
+        let explicitIdValue = explicitId?.type === 'Property' ? stringValue(explicitId) : undefined
+        if (explicitIdValue) {
           edits.push({
-            start: message.start,
-            end: message.end,
-            text: `{ id: ${JSON.stringify(generateId(values))} }`,
+            start: node.start,
+            end: node.end,
+            text: `{ id: ${JSON.stringify(explicitIdValue)} }`,
           })
+        } else if (message.properties.every((property) => property.type === 'Property')) {
+          let values: Record<string, string> = {}
+          let isStatic = true
+          for (let property of message.properties) {
+            if (property.type !== 'Property') continue
+            let name = propertyName(property)
+            let value = stringValue(property)
+            if (!name || value === undefined) {
+              isStatic = false
+              break
+            }
+            values[name] = value
+          }
+          // Dynamic expressions cannot be hashed at build time to match defineMessage on the server.
+          if (isStatic && Object.hasOwn(values, 'defaultMessage')) {
+            edits.push({
+              start: node.start,
+              end: node.end,
+              text: `{ id: ${JSON.stringify(generateId(values))} }`,
+            })
+          }
         }
       }
     }

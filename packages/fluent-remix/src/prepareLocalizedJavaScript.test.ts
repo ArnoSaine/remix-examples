@@ -19,7 +19,7 @@ async function transform(source: string) {
 }
 
 describe('prepareLocalizedJavaScript', () => {
-  it('replaces ID-less defineMessage descriptors with only the server-generated ID', async () => {
+  it('replaces resolvable defineMessage calls with ID-only objects', async () => {
     let greeting = generateId({ defaultMessage: 'Hi' })
     let described = generateId({ defaultMessage: 'Hi', description: 'A greeting message' })
     let output = await transform(`// defineMessage({ defaultMessage: 'In a comment' })
@@ -30,26 +30,38 @@ const reversed = defineMessage({ defaultMessage: 'Hi', description: 'A greeting 
 const explicit = defineMessage({ id: 'fixed', defaultMessage: 'Visible' });
 const other = notDefineMessage({ defaultMessage: 'Unchanged' });`)
 
-    assert.match(output, new RegExp(`const simple = defineMessage\\(\\{ id: "${greeting}" \\}\\)`))
-    assert.equal(
-      (output.match(new RegExp(`defineMessage\\(\\{ id: "${described}" \\}\\)`, 'g')) ?? []).length,
-      2,
-    )
-    assert.match(output, /defineMessage\(\{ id: 'fixed', defaultMessage: 'Visible' \}\)/)
+    assert.match(output, new RegExp(`const simple = \\{ id: "${greeting}" \\}`))
+    assert.equal((output.match(new RegExp(`\\{ id: "${described}" \\}`, 'g')) ?? []).length, 2)
+    assert.match(output, /const explicit = \{ id: "fixed" \}/)
+    assert.doesNotMatch(output, /defaultMessage: 'Visible'/)
     assert.match(output, /notDefineMessage\(\{ defaultMessage: 'Unchanged' \}\)/)
     assert.match(output, /\/\/ defineMessage\(\{ defaultMessage: 'In a comment' \}\)/)
     assert.match(output, /const text = "defineMessage\(\{ defaultMessage: 'In a string' \}\)"/)
     assert.doesNotMatch(output, /const simple = defineMessage\(\{ defaultMessage: 'Hi' \}\)/)
   })
 
-  it('leaves dynamic or spread message descriptors untouched', async () => {
+  it('leaves ID-less dynamic descriptors untouched but strips explicit-ID payloads', async () => {
     let source = `const dynamic = defineMessage({ defaultMessage: getMessage() });
 const description = defineMessage({ defaultMessage: 'Hi', description: getDescription() });
 const spread = defineMessage({ ...message, defaultMessage: 'Hi' });
 const missing = defineMessage({ description: 'No default' });
-const explicit = defineMessage({ id: 'fixed', defaultMessage: 'Hi' });`
+const explicit = defineMessage({ id: 'fixed', defaultMessage: getMessage() });
+const explicitSpread = defineMessage({ ...message, id: 'spread-id' });`
 
-    assert.equal(await transform(source), source)
+    let output = await transform(source)
+    assert.match(output, /const dynamic = defineMessage\(\{ defaultMessage: getMessage\(\) \}\)/)
+    assert.match(
+      output,
+      /const description = defineMessage\(\{ defaultMessage: 'Hi', description: getDescription\(\) \}\)/,
+    )
+    assert.match(
+      output,
+      /const spread = defineMessage\(\{ \.\.\.message, defaultMessage: 'Hi' \}\)/,
+    )
+    assert.match(output, /const missing = defineMessage\(\{ description: 'No default' \}\)/)
+    assert.match(output, /const explicit = \{ id: "fixed" \}/)
+    assert.match(output, /const explicitSpread = \{ id: "spread-id" \}/)
+    assert.doesNotMatch(output, /defaultMessage: getMessage\(\) \}\);\nconst explicitSpread/)
   })
 
   it('rewrites messages and localized JSX independently in the same module', async () => {
@@ -58,7 +70,7 @@ const explicit = defineMessage({ id: 'fixed', defaultMessage: 'Hi' });`
     let output = await transform(`const message = defineMessage({ defaultMessage: 'Hello' });
 const element = _jsx('p', { 'data-l10n': true, children: 'Welcome' });`)
 
-    assert.match(output, new RegExp(`defineMessage\\(\\{ id: "${messageId}" \\}\\)`))
+    assert.match(output, new RegExp(`const message = \\{ id: "${messageId}" \\}`))
     assert.match(output, new RegExp(`"data-l10n-id": "${elementId}"`))
     assert.match(output, /children: null/)
   })
